@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Hoteles</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1, h2 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .form-container {
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gestión de Hoteles</h1>
+    
+    <div class="form-container">
+        <h2>Agregar Nuevo Hotel</h2>
+        <form id="form-hotel" action="procesar_hotel.php" method="POST">
+            <div class="form-group">
+                <label for="nombre">Nombre del Hotel</label>
+                <input type="text" id="nombre" name="nombre" required>
+                <div class="error" id="error-nombre"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="ubicacion">Ubicación (Ciudad, País)</label>
+                <input type="text" id="ubicacion" name="ubicacion" required>
+                <div class="error" id="error-ubicacion"></div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="habitaciones">Habitaciones Disponibles</label>
+                    <input type="number" id="habitaciones" name="habitaciones" min="1" required>
+                    <div class="error" id="error-habitaciones"></div>
+                </div>
+                <div class="form-group">
+                    <label for="tarifa">Tarifa por Noche (CLP)</label>
+                    <input type="number" id="tarifa" name="tarifa" min="1" step="0.01" required>
+                    <div class="error" id="error-tarifa"></div>
+                </div>
+            </div>
+            
+            <button type="submit">Guardar Hotel</button>
+        </form>
+    </div>
+    
+    <div class="form-container">
+        <h2>Listado de Hoteles</h2>
+        <?php
+        // Conexión a la base de datos
+        $conn = new PDO("pgsql:host=localhost;dbname=Agencia3", "postgres", "tu_password");
+        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        
+        // Consulta para obtener los hoteles
+        $query = "SELECT id_hotel, nombre, ubicacion, habitaciones_disponibles, tarifa_noche 
+                  FROM HOTEL 
+                  ORDER BY nombre";
+        $stmt = $conn->prepare($query);
+        $stmt->execute();
+        $hoteles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        if (count($hoteles)) {
+            echo '<table>';
+            echo '<tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Ubicación</th>
+                    <th>Habitaciones</th>
+                    <th>Tarifa/Noche</th>
+                  </tr>';
+            
+            foreach ($hoteles as $hotel) {
+                echo '<tr>';
+                echo '<td>' . htmlspecialchars($hotel['id_hotel']) . '</td>';
+                echo '<td>' . htmlspecialchars($hotel['nombre']) . '</td>';
+                echo '<td>' . htmlspecialchars($hotel['ubicacion']) . '</td>';
+                echo '<td>' . htmlspecialchars($hotel['habitaciones_disponibles']) . '</td>';
+                echo '<td>$' . number_format($hotel['tarifa_noche'], 0, ',', '.') . '</td>';
+                echo '</tr>';
+            }
+            echo '</table>';
+        } else {
+            echo '<p>No hay hoteles registrados.</p>';
+        }
+        ?>
+    </div>
+
+    <script>
+        // Validación del formulario de hoteles
+        document.getElementById('form-hotel').addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            // Validar nombre del hotel
+            const nombre = document.getElementById('nombre').value.trim();
+            if (nombre === '') {
+                document.getElementById('error-nombre').textContent = 'Debe ingresar un nombre';
+                isValid = false;
+            } else {
+                document.getElementById('error-nombre').textContent = '';
+            }
+            
+            // Validar ubicación (debe contener ciudad y país)
+            const ubicacion = document.getElementById('ubicacion').value.trim();
+            if (ubicacion === '') {
+                document.getElementById('error-ubicacion').textContent = 'Debe ingresar una ubicación';
+                isValid = false;
+            } else if (!ubicacion.includes(',')) {
+                document.getElementById('error-ubicacion').textContent = 'Formato: Ciudad, País';
+                isValid = false;
+            } else {
+                document.getElementById('error-ubicacion').textContent = '';
+            }
+            
+            // Validar habitaciones (mínimo 1)
+            const habitaciones = parseInt(document.getElementById('habitaciones').value);
+            if (isNaN(habitaciones)) {
+                document.getElementById('error-habitaciones').textContent = 'Debe ingresar un número válido';
+                isValid = false;
+            } else if (habitaciones < 1) {
+                document.getElementById('error-habitaciones').textContent = 'Debe haber al menos 1 habitación';
+                isValid = false;
+            } else {
+                document.getElementById('error-habitaciones').textContent = '';
+            }
+            
+            // Validar tarifa (positiva)
+            const tarifa = parseFloat(document.getElementById('tarifa').value);
+            if (isNaN(tarifa)) {
+                document.getElementById('error-tarifa').textContent = 'Debe ingresar un número válido';
+                isValid = false;
+            } else if (tarifa <= 0) {
+                document.getElementById('error-tarifa').textContent = 'La tarifa debe ser mayor a 0';
+                isValid = false;
+            } else {
+                document.getElementById('error-tarifa').textContent = '';
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

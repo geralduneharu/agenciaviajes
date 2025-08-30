@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Viajes - Vuelos y Hoteles</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        /* Estilos para las pestañas */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+        }
+        .tab.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #2980b9;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Estilos comunes para formularios */
+        .search-form, .management-form {
+            background-color: #f9f9f9;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .form-note {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        .error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        /* Estilos para la tabla de resultados */
+        .results-container {
+            margin-top: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .no-results {
+            color: #cc0000;
+            font-size: 18px;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gestión Integral de Viajes</h1>
+    
+    <div class="tabs">
+        <div class="tab active" onclick="openTab(event, 'search-tab')">Buscar Viajes</div>
+        <div class="tab" onclick="openTab(event, 'flights-tab')">Gestionar Vuelos</div>
+        <div class="tab" onclick="openTab(event, 'hotels-tab')">Gestionar Hoteles</div>
+    </div>
+    
+    <!-- Pestaña de Búsqueda de Viajes -->
+    <div id="search-tab" class="tab-content active">
+        <form class="search-form" method="POST" action="buscar_viajes.php">
+            <!-- Filtro por destino -->
+            <div class="form-group">
+                <label for="ciudad">Ciudad de destino</label>
+                <input type="text" id="ciudad" name="ciudad" placeholder="Ej: París, Roma, Nueva York">
+                <p class="form-note">Puedes escribir el nombre de la ciudad que deseas visitar</p>
+            </div>
+            
+            <div class="form-row">
+                <!-- Filtro por país -->
+                <div class="form-group">
+                    <label for="pais">País</label>
+                    <input type="text" id="pais" name="pais" placeholder="Ej: Francia, Italia, EE.UU.">
+                </div>
+                
+                <!-- Filtro por hotel -->
+                <div class="form-group">
+                    <label for="nombre_hotel">Nombre del hotel (opcional)</label>
+                    <input type="text" id="nombre_hotel" name="nombre_hotel" placeholder="Ej: Hotel Ritz">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <!-- Filtro por fecha -->
+                <div class="form-group">
+                    <label for="fecha_viaje">Fecha de viaje</label>
+                    <input type="date" id="fecha_viaje" name="fecha_viaje" min="<?= date('Y-m-d') ?>">
+                </div>
+                
+                <!-- Filtro por duración -->
+                <div class="form-group">
+                    <label for="duracion">Duración (días)</label>
+                    <input type="number" id="duracion" name="duracion" min="1" value="7">
+                </div>
+            </div>
+            
+            <!-- Filtro por rango de precio -->
+            <div class="form-group">
+                <label for="price-range">Rango de precio</label>
+                <select id="price-range" name="price-range">
+                    <option value="">Todos los precios</option>
+                    <option value="economy">Económico (hasta $500.000)</option>
+                    <option value="medium">Medio ($500.000 - $2.000.000)</option>
+                    <option value="premium">Premium (más de $3.000.000)</option>
+                </select>
+            </div>
+            
+            <button type="submit">Buscar Viajes</button>
+        </form>
+    </div>
+    
+    <!-- Pestaña de Gestión de Vuelos -->
+    <div id="flights-tab" class="tab-content">
+        <form id="flight-form" class="management-form" action="procesar_vuelo.php" method="POST">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="flight-origen">Origen</label>
+                    <input type="text" id="flight-origen" name="origen" required>
+                    <div class="error" id="error-flight-origen"></div>
+                </div>
+                <div class="form-group">
+                    <label for="flight-destino">Destino</label>
+                    <input type="text" id="flight-destino" name="destino" required>
+                    <div class="error" id="error-flight-destino"></div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="flight-fecha">Fecha y Hora</label>
+                    <input type="datetime-local" id="flight-fecha" name="fecha" required>
+                    <div class="error" id="error-flight-fecha"></div>
+                </div>
+                <div class="form-group">
+                    <label for="flight-plazas">Plazas Disponibles</label>
+                    <input type="number" id="flight-plazas" name="plazas" min="1" required>
+                    <div class="error" id="error-flight-plazas"></div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="flight-precio">Precio (CLP)</label>
+                    <input type="number" id="flight-precio" name="precio" min="1" step="0.01" required>
+                    <div class="error" id="error-flight-precio"></div>
+                </div>
+                <div class="form-group">
+                    <label for="flight-aerolinea">Aerolínea</label>
+                    <input type="text" id="flight-aerolinea" name="aerolinea" required>
+                    <div class="error" id="error-flight-aerolinea"></div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="flight-codigo">Código de Vuelo</label>
+                    <input type="text" id="flight-codigo" name="codigo" required>
+                    <div class="error" id="error-flight-codigo"></div>
+                </div>
+                <div class="form-group">
+                    <label for="flight-duracion">Duración (minutos)</label>
+                    <input type="number" id="flight-duracion" name="duracion" min="1" required>
+                    <div class="error" id="error-flight-duracion"></div>
+                </div>
+            </div>
+            
+            <button type="submit">Guardar Vuelo</button>
+        </form>
+        
+        <div class="results-container">
+            <h2>Vuelos Registrados</h2>
+            <div id="flights-results">
+                <!-- Los resultados de vuelos se cargarán aquí mediante AJAX -->
+                <p class="no-results">No hay vuelos registrados aún.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pestaña de Gestión de Hoteles -->
+    <div id="hotels-tab" class="tab-content">
+        <form id="hotel-form" class="management-form" action="procesar_hotel.php" method="POST">
+            <div class="form-group">
+                <label for="hotel-nombre">Nombre del Hotel</label>
+                <input type="text" id="hotel-nombre" name="nombre" required>
+                <div class="error" id="error-hotel-nombre"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="hotel-ubicacion">Ubicación (Ciudad, País)</label>
+                <input type="text" id="hotel-ubicacion" name="ubicacion" required>
+                <div class="error" id="error-hotel-ubicacion"></div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="hotel-habitaciones">Habitaciones Disponibles</label>
+                    <input type="number" id="hotel-habitaciones" name="habitaciones" min="1" required>
+                    <div class="error" id="error-hotel-habitaciones"></div>
+                </div>
+                <div class="form-group">
+                    <label for="hotel-tarifa">Tarifa por Noche (CLP)</label>
+                    <input type="number" id="hotel-tarifa" name="tarifa" min="1" step="0.01" required>
+                    <div class="error" id="error-hotel-tarifa"></div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="hotel-descripcion">Descripción (opcional)</label>
+                <textarea id="hotel-descripcion" name="descripcion" rows="3"></textarea>
+            </div>
+            
+            <button type="submit">Guardar Hotel</button>
+        </form>
+        
+        <div class="results-container">
+            <h2>Hoteles Registrados</h2>
+            <div id="hotels-results">
+                <!-- Los resultados de hoteles se cargarán aquí mediante AJAX -->
+                <p class="no-results">No hay hoteles registrados aún.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función para cambiar entre pestañas
+        function openTab(evt, tabName) {
+            const tabs = document.getElementsByClassName("tab");
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].className = tabs[i].className.replace(" active", "");
+            }
+            
+            const tabContents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].className = tabContents[i].className.replace(" active", "");
+            }
+            
+            evt.currentTarget.className += " active";
+            document.getElementById(tabName).className += " active";
+            
+            // Cargar datos cuando se activa la pestaña
+            if (tabName === 'flights-tab') {
+                loadFlights();
+            } else if (tabName === 'hotels-tab') {
+                loadHotels();
+            }
+        }
+        
+        // Cargar vuelos mediante AJAX
+        function loadFlights() {
+            fetch('obtener_vuelos.php')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('flights-results').innerHTML = data;
+                })
+                .catch(error => {
+                    console.error('Error al cargar vuelos:', error);
+                    document.getElementById('flights-results').innerHTML = 
+                        '<p class="no-results">Error al cargar los vuelos. Intente nuevamente.</p>';
+                });
+        }
+        
+        // Cargar hoteles mediante AJAX
+        function loadHotels() {
+            fetch('obtener_hoteles.php')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('hotels-results').innerHTML = data;
+                })
+                .catch(error => {
+                    console.error('Error al cargar hoteles:', error);
+                    document.getElementById('hotels-results').innerHTML = 
+                        '<p class="no-results">Error al cargar los hoteles. Intente nuevamente.</p>';
+                });
+        }
+        
+        // Validación del formulario de vuelos
+        document.getElementById('flight-form').addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            // Validar origen y destino
+            const origen = document.getElementById('flight-origen').value.trim();
+            const destino = document.getElementById('flight-destino').value.trim();
+            
+            if (origen === '') {
+                document.getElementById('error-flight-origen').textContent = 'Debe ingresar un origen';
+                isValid = false;
+            } else {
+                document.getElementById('error-flight-origen').textContent = '';
+            }
+            
+            if (destino === '') {
+                document.getElementById('error-flight-destino').textContent = 'Debe ingresar un destino';
+                isValid = false;
+            } else if (origen !== '' && origen.toLowerCase() === destino.toLowerCase()) {
+                document.getElementById('error-flight-destino').textContent = 'El destino no puede ser igual al origen';
+                isValid = false;
+            } else {
+                document.getElementById('error-flight-destino').textContent = '';
+            }
+            
+            // Validar fecha (debe ser futura)
+            const fechaInput = document.getElementById('flight-fecha').value;
+            const fechaVuelo = new Date(fechaInput);
+            const ahora = new Date();
+            
+            if (!fechaInput || fechaVuelo <= ahora) {
+                document.getElementById('error-flight-fecha').textContent = 'La fecha debe ser futura';
+                isValid = false;
+            } else {
+                document.getElementById('error-flight-fecha').textContent = '';
+            }
+            
+            // Validar plazas (mínimo 1)
+            const plazas = parseInt(document.getElementById('flight-plazas').value);
+            if (isNaN(plazas)) {
+                document.getElementById('error-flight-plazas').textContent = 'Debe ingresar un número válido';
+                isValid = false;
+            } else if (plazas < 1) {
+                document.getElementById('error-flight-plazas').textContent = 'Debe haber al menos 1 plaza';
+                isValid = false;
+            } else {
+                document.getElementById('error-flight-plazas').textContent = '';
+            }
+            
+            // Validar precio (positivo)
+            const precio = parseFloat(document.getElementById('flight-precio').value);
+            if (isNaN(precio)) {
+                document.getElementById('error-flight-precio').textContent = 'Debe ingresar un número válido';
+                isValid = false;
+            } else if (precio <= 0) {
+                document.getElementById('error-flight-precio').textContent = 'El precio debe ser mayor a 0';
+                isValid = false;
+            } else {
+                document.getElementById('error-flight-precio').textContent = '';
+            }
+            
+            // Validar aerolínea
+            const aerolinea = document.getElementById('flight-aerolinea').value.trim();
+            if (aerolinea === '') {
+                document.getElementById('error-flight-aerolinea').textContent = 'Debe ingresar una aerolínea';
+                isValid = false;
+            } else {
+                document.getElementById('error-flight-aerolinea').textContent = '';
+            }
+            
+            // Validar código de vuelo (formato AA1234)
+            const codigo = document.getElementById('flight-codigo').value.trim();
+            const codigoRegex = /^[A-Z]{2,3}\d{3,4}$/;
+            
+            if (codigo === '') {
+                document.getElementById('error-flight-codigo').textContent = 'Debe ingresar un código';
+                isValid = false;
+            } else if (!codigoRegex.test(codigo)) {
+                document.getElementById('error-flight-codigo').textContent = 'Formato inválido (ej: AA1234)';
+                isValid = false;
+            } else {
+                document.getElementById('error-flight-codigo').textContent = '';
+            }
+            
+            // Validar duración (mínimo 1 minuto)
+            const duracion = parseInt(document.getElementById('flight-duracion').value);
+            if (isNaN(duracion)) {
+                document.getElementById('error-flight-duracion').textContent = 'Debe ingresar un número válido';
+                isValid = false;
+            } else if (duracion < 1) {
+                document.getElementById('error-flight-duracion').textContent = 'La duración debe ser al menos 1 minuto';
+                isValid = false;
+            } else {
+                document.getElementById('error-flight-duracion').textContent = '';
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+            } else {
+                // Enviar formulario con AJAX si es válido
+                e.preventDefault();
+                const formData = new FormData(this);
+                
+                fetch('procesar_vuelo.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Vuelo registrado exitosamente');
+                        this.reset();
+                        loadFlights();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al registrar el vuelo');
+                });
+            }
+        });
+        
+        // Validación del formulario de hoteles
+        document.getElementById('hotel-form').addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            // Validar nombre del hotel
+            const nombre = document.getElementById('hotel-nombre').value.trim();
+            if (nombre === '') {
+                document.getElementById('error-hotel-nombre').textContent = 'Debe ingresar un nombre';
+                isValid = false;
+            } else {
+                document.getElementById('error-hotel-nombre').textContent = '';
+            }
+            
+            // Validar ubicación (debe contener ciudad y país)
+            const ubicacion = document.getElementById('hotel-ubicacion').value.trim();
+            if (ubicacion === '') {
+                document.getElementById('error-hotel-ubicacion').textContent = 'Debe ingresar una ubicación';
+                isValid = false;
+            } else if (!ubicacion.includes(',')) {
+                document.getElementById('error-hotel-ubicacion').textContent = 'Formato: Ciudad, País';
+                isValid = false;
+            } else {
+                document.getElementById('error-hotel-ubicacion').textContent = '';
+            }
+            
+            // Validar habitaciones (mínimo 1)
+            const habitaciones = parseInt(document.getElementById('hotel-habitaciones').value);
+            if (isNaN(habitaciones)) {
+                document.getElementById('error-hotel-habitaciones').textContent = 'Debe ingresar un número válido';
+                isValid = false;
+            } else if (habitaciones < 1) {
+                document.getElementById('error-hotel-habitaciones').textContent = 'Debe haber al menos 1 habitación';
+                isValid = false;
+            } else {
+                document.getElementById('error-hotel-habitaciones').textContent = '';
+            }
+            
+            // Validar tarifa (positiva)
+            const tarifa = parseFloat(document.getElementById('hotel-tarifa').value);
+            if (isNaN(tarifa)) {
+                document.getElementById('error-hotel-tarifa').textContent = 'Debe ingresar un número válido';
+                isValid = false;
+            } else if (tarifa <= 0) {
+                document.getElementById('error-hotel-tarifa').textContent = 'La tarifa debe ser mayor a 0';
+                isValid = false;
+            } else {
+                document.getElementById('error-hotel-tarifa').textContent = '';
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+            } else {
+                // Enviar formulario con AJAX si es válido
+                e.preventDefault();
+                const formData = new FormData(this);
+                
+                fetch('procesar_hotel.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Hotel registrado exitosamente');
+                        this.reset();
+                        loadHotels();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al registrar el hotel');
+                });
+            }
+        });
+        
+        // Cargar vuelos al cargar la página si estamos en esa pestaña
+        document.addEventListener('DOMContentLoaded', function() {
+            const activeTab = document.querySelector('.tab.active');
+            if (activeTab && activeTab.getAttribute('onclick').includes('flights-tab')) {
+                loadFlights();
+            }
+        });
+    </script>
+</body>
+</html>
