@@ -1,4 +1,5 @@
-<?php
+<?php 
+//Inicio del archivo (MarcOSJoestar)
 session_start();
 
 // Inicializar el carrito si no existe
