@@ -15,7 +15,7 @@ $compra = $_SESSION['ultima_compra'];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirmación de Compra - Agencia de Viajes</title>
+    <title>Confirmación de Compra - Agencia de Viajes para Turismo Santiago</title> <!--Marcos: Se deja comentario debido a que se cambia nombre por Agencia de Viajes para turismo Santiago -->
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
