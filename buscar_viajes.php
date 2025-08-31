@@ -61,7 +61,8 @@ $resultados = $filtro->filtrar($viajes);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resultados de Búsqueda</title>
+    <!-- Marcos fecrnández: Se deja comentario para que este trozo de código se cambie el nombre para el HTML de resultado de busqueda -->
+    <title>Busquedas encontradas</title>
     <style>
         body { font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
         .result-container { margin-top: 30px; }
